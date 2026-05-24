@@ -1,0 +1,1 @@
+Sistema backend desenvolvido para gerenciamento de clientes e simulação de integração com o Pipefy utilizando GraphQL.
