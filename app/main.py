@@ -1,36 +1,19 @@
 from fastapi import FastAPI
-from pydantic import BaseModel
-from typing import List
 
-app = FastAPI()
+from app.database import engine, Base
+from app.routes.client_routes import router as client_router
 
-# Banco fake em memória
-clients = []
+Base.metadata.create_all(bind=engine)
 
-# Model do cliente
-class Client(BaseModel):
-    id: int
-    name: str
-    email: str
-    patrimonio: float
+app = FastAPI(
+    title="Client Management API",
+    version="1.0.0"
+)
 
+app.include_router(client_router)
 
 @app.get("/")
 def home():
-    return {"message": "API funcionando"}
-
-
-# Listar clientes
-@app.get("/clients")
-def get_clients():
-    return clients
-
-
-# Criar cliente
-@app.post("/clients")
-def create_client(client: Client):
-    clients.append(client)
     return {
-        "message": "Cliente criado com sucesso",
-        "client": client
+        "message": "API funcionando"
     }
