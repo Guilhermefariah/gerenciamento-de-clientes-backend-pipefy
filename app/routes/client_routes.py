@@ -3,49 +3,81 @@ from sqlalchemy.orm import Session
 
 from app.database import SessionLocal
 from app.models.client import Client
-from app.schemas.client import ClientCreate, ClientResponse
-from app.services.pipefy_service import send_client_to_pipefy
+from app.schemas.client import (
+    ClientCreate,
+    ClientResponse
+)
+
+from app.services.pipefy_service import (
+    send_client_to_pipefy
+)
 
 router = APIRouter()
 
-# Dependency
+
 def get_db():
     db = SessionLocal()
+
     try:
         yield db
+
     finally:
         db.close()
 
 
-@router.post("/clients", response_model=ClientResponse)
-def create_client(client: ClientCreate, db: Session = Depends(get_db)):
+@router.post(
+    "/clients",
+    response_model=ClientResponse
+)
 
-    # Verifica se email já existe
+def create_client(
+    client: ClientCreate,
+    db: Session = Depends(get_db)
+):
+
     existing_client = db.query(Client).filter(
-        Client.email == client.email
+        Client.cliente_email ==
+        client.cliente_email
     ).first()
 
     if existing_client:
+
         raise HTTPException(
             status_code=400,
             detail="Email já cadastrado"
         )
 
-    # Cria novo cliente
+    priority = (
+        "prioridade_alta"
+        if client.valor_patrimonio >= 200000
+        else "prioridade_normal"
+    )
+
     new_client = Client(
-        name=client.name,
-        email=client.email,
-        patrimonio=client.patrimonio
+        cliente_nome=client.cliente_nome,
+        cliente_email=client.cliente_email,
+        tipo_solicitacao=client.tipo_solicitacao,
+        valor_patrimonio=client.valor_patrimonio,
+        priority=priority,
+        status="Aguardando Análise"
     )
 
     db.add(new_client)
+
     db.commit()
+
     db.refresh(new_client)
 
-    # Simulação integração Pipefy GraphQL
     pipefy_response = send_client_to_pipefy({
-        "name": client.name,
-        "email": client.email
+
+        "cliente_nome":
+        client.cliente_nome,
+
+        "cliente_email":
+        client.cliente_email,
+
+        "valor_patrimonio":
+        client.valor_patrimonio
     })
 
     print(pipefy_response)
@@ -53,6 +85,13 @@ def create_client(client: ClientCreate, db: Session = Depends(get_db)):
     return new_client
 
 
-@router.get("/clients", response_model=list[ClientResponse])
-def list_clients(db: Session = Depends(get_db)):
+@router.get(
+    "/clients",
+    response_model=list[ClientResponse]
+)
+
+def list_clients(
+    db: Session = Depends(get_db)
+):
+
     return db.query(Client).all()
