@@ -8,3 +8,5 @@ class Client(Base):
     name = Column(String, nullable=False)
     email = Column(String, unique=True, nullable=False)
     patrimonio = Column(Float, nullable=False)
+    tipo_solicitacao = Column(String, nullable=False)
+    status = Column(String, nullable=False)
